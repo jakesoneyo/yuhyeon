@@ -1,0 +1,43 @@
+# 로컬 개발/데모용 구성 — 프로덕션 배포(Neon/Render)와는 무관하다.
+# 사용법: docker-compose up --build 로 Postgres+backend를 띄운 뒤,
+#   docker-compose exec backend npm run seed:demo
+# 로 데모 데이터를 채운다.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: yuhyeon
+      POSTGRES_PASSWORD: yuhyeon
+      POSTGRES_DB: yuhyeon
+    ports:
+      - '5432:5432'
+    volumes:
+      - yuhyeon-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U yuhyeon']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://yuhyeon:yuhyeon@postgres:5432/yuhyeon
+      AGENT_API_KEY: local-demo-api-key
+      AGENT_HMAC_SECRET: local-demo-hmac-secret
+      ALLOWED_AGENT_ID: ''
+      JWT_SECRET: local-demo-jwt-secret
+      JWT_EXPIRES_IN: 1d
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - '3000:3000'
+
+volumes:
+  yuhyeon-postgres-data:
