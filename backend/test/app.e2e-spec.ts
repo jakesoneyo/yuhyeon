@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 
-describe('AppController (e2e)', () => {
+describe('Health (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
@@ -16,17 +16,19 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/api/health (GET)', () => {
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('/api/health (GET) — DB 핑 포함 응답', () => {
     return request(app.getHttpServer())
       .get('/api/health')
       .expect(200)
       .expect((res) => {
-        expect(res.body.ok).toBe(true);
-        expect(res.body.service).toBe('backend');
+        const body = res.body as { ok: boolean; service: string; db: string };
+        expect(body.ok).toBe(true);
+        expect(body.service).toBe('backend');
+        expect(body.db).toBe('up');
       });
-  });
-
-  afterEach(async () => {
-    await app.close();
   });
 });
