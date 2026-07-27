@@ -18,15 +18,29 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "smoke:render": "node scripts/render-smoke.mjs"
+    "smoke:render": "node scripts/render-smoke.mjs",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "seed:admin": "ts-node scripts/seed-admin.ts",
+    "seed:sites": "ts-node scripts/seed-sites.ts",
+    "seed:simulate": "ts-node scripts/simulate-ingest.ts",
+    "seed:demo": "npm run seed:admin && npm run seed:sites && npm run seed:simulate"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
-    "better-sqlite3": "^12.8.0",
+    "@nestjs/swagger": "^11.4.6",
+    "@prisma/client": "^6.5.0",
+    "argon2": "^0.41.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
     "dotenv": "^17.3.1",
-    "pg": "^8.20.0",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "prisma": "^6.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -36,11 +50,11 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
-    "@types/better-sqlite3": "^7.6.13",
+    "@testcontainers/postgresql": "^12.0.4",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
-    "@types/pg": "^8.20.0",
+    "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^7.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -56,6 +70,12 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node"
+    }
   },
   "jest": {
     "moduleFileExtensions": [

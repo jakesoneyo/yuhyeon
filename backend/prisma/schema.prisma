@@ -1,0 +1,65 @@
+// Prisma 스키마 — SiteScope. 스키마 정의는 이 파일(및 migrate)이 유일한 진실의 근원이다.
+// (기존 app.service.ts 런타임 CREATE TABLE 로직은 제거됨 — DATA-MODEL.md §5 참고)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+/// 대시보드 사용자 (사람 인증). 에이전트 인증(x-api-key+HMAC)과는 별개 경계.
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique // 데모 계정은 'admin' 리터럴 허용(로그인 스키마 한정, register는 이메일 강제)
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  sites        Site[]
+}
+
+/// 건설현장 마스터. 지도 표시용 좌표 포함.
+model Site {
+  id        String   @id @default(cuid())
+  code      String   @unique // 에이전트 siteId 와 매칭되는 논리 키(FK 강제 없음 — 아래 RawLog 설명 참고)
+  name      String
+  address   String
+  lat       Float
+  lng       Float
+  owner     User?    @relation(fields: [ownerId], references: [id])
+  ownerId   String?
+  createdAt DateTime @default(now())
+}
+
+/// 멱등성 판정 테이블. idempotencyKey 유일. raw_logs 본삽입의 게이트키퍼.
+model IngestDedup {
+  idempotencyKey String   @id @map("idempotency_key")
+  createdAt      DateTime @map("created_at")
+
+  @@map("ingest_dedup")
+}
+
+/// 수집된 원시 계측 로그(정확히 한 번 적재). siteId는 Site.code와 논리적으로만 연결되며
+/// FK를 걸지 않는다 — 현장이 사전 등록되지 않아도 수집 유실 없이 일단 적재해야 하기 때문.
+model RawLog {
+  id             BigInt   @id @default(autoincrement())
+  siteId         String   @map("site_id")
+  agentId        String   @map("agent_id")
+  sourceFile     String   @map("source_file")
+  lineOffset     BigInt   @map("line_offset")
+  occurredAt     DateTime @map("occurred_at")
+  rawLine        String   @map("raw_line")
+  parsedPayload  Json?    @map("parsed_payload_json")
+  idempotencyKey String   @unique @map("idempotency_key")
+  receivedAt     DateTime @map("received_at")
+
+  @@index([siteId, occurredAt(sort: Desc)]) // 현장별 시계열 조회 (F7, F9)
+  @@index([siteId, receivedAt(sort: Desc)]) // 최근 수신 정렬 (F6)
+  @@map("raw_logs")
+}
