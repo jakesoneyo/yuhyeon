@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    # unit/e2e 스펙(auth/ingest/app)이 쓰는 실 DATABASE_URL용 Postgres.
+    # 동시성 증명(ingest-concurrency.e2e-spec.ts)은 Testcontainers가 별도 컨테이너를 직접 띄운다.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: yuhyeon
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/yuhyeon
+      AGENT_API_KEY: ci-agent-api-key
+      AGENT_HMAC_SECRET: ci-agent-hmac-secret
+      ALLOWED_AGENT_ID: ''
+      JWT_SECRET: ci-jwt-secret
+      JWT_EXPIRES_IN: 1d
+      CORS_ORIGIN: http://localhost:5173
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Apply migrations (CI Postgres service)
+        run: npx prisma migrate deploy
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Integration tests (Testcontainers)
+        run: npm run test:e2e
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
