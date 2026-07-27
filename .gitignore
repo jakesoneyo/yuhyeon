@@ -1,11 +1,30 @@
 planner/
+mobile/
+mobileMockup/
+강사님유현/
 .DS_Store
+
+# 기획/설계/검수 문서 — 로컬 참고·면접 준비용, 공개 레포에는 README.md만 노출
+SPEC.md
+ARCHITECTURE.md
+DATA-MODEL.md
+API.md
+PLAN.md
+DESIGN.md
+REVIEW.md
+STUDY.md
+INTERVIEW.md
+STUDY.pdf
+INTERVIEW.pdf
 
 # Local environment/secrets
 .env
 .env.*
 **/.env
 **/.env.*
+# 단, 템플릿 파일(.env.example류)은 커밋 대상이므로 예외 처리
+!.env*.example
+!**/.env*.example
 
 # Agent: Windows pkg용 SQLite 네이티브 (빌드 시 fetch)
 agent/better_sqlite3.node
