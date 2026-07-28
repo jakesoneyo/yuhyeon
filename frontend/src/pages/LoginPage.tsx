@@ -91,10 +91,10 @@ export function LoginPage() {
           disabled={mutation.isPending}
           className="mt-3 w-full rounded-chip border border-accent bg-accent-soft px-4 py-2 text-sm font-semibold text-accent transition disabled:opacity-60"
         >
-          회원가입 없이 데모로 둘러보기
+          회원가입 없이 둘러보기
         </button>
         <p className="mt-2 text-center text-xs text-muted">
-          회원가입 없이 admin 계정으로 바로 대시보드를 체험할 수 있습니다.
+          회원가입 없이 체험해 볼 수 있습니다.
         </p>
       </div>
     </div>
