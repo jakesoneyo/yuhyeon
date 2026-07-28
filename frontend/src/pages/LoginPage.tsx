@@ -93,6 +93,9 @@ export function LoginPage() {
         >
           회원가입 없이 데모로 둘러보기
         </button>
+        <p className="mt-2 text-center text-xs text-muted">
+          회원가입 없이 admin 계정으로 바로 대시보드를 체험할 수 있습니다.
+        </p>
       </div>
     </div>
   );
