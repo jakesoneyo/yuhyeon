@@ -1,5 +1,5 @@
 // 로그인 화면. 일반 로그인 폼 + 데모 관리자 원클릭 로그인 버튼(SPEC §5) 제공.
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Building2, LogIn } from "lucide-react";
@@ -23,6 +23,19 @@ export function LoginPage() {
       navigate("/dashboard", { replace: true });
     },
   });
+
+  const [showColdStartHint, setShowColdStartHint] = useState(false);
+
+  // Render 무료 티어 콜드스타트로 로그인이 오래 걸릴 수 있어, 4초 넘게 pending이면
+  // "화면이 멈췄다"는 오해를 막기 위해 안내 문구를 띄운다. 요청이 끝나면 즉시 정리한다.
+  useEffect(() => {
+    if (!mutation.isPending) return;
+    const timer = setTimeout(() => setShowColdStartHint(true), 4000);
+    return () => {
+      clearTimeout(timer);
+      setShowColdStartHint(false);
+    };
+  }, [mutation.isPending]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -83,6 +96,11 @@ export function LoginPage() {
             <LogIn size={16} />
             로그인
           </button>
+          {showColdStartHint && (
+            <p className="text-center text-xs text-muted">
+              서버를 깨우는 중입니다.
+            </p>
+          )}
         </form>
 
         <button
